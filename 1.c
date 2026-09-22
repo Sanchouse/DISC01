@@ -11,6 +11,8 @@ int var_count = 0;
 
 int values[26];
 
+int fictivs[26];
+
 void add_variable(char c) {
 	c = toupper(c);
 
@@ -256,6 +258,8 @@ int eval() {
 }
 
 int main() {
+	
+
 	FILE* fp = fopen("formula.txt", "r");
 	if (fp == NULL) {
 		printf("Error opening the file!\n");
@@ -280,7 +284,13 @@ int main() {
 
 	char PDNF[10000] = "";
 	char PKNF[10000] = "";
+	int results[2048];
+	int count_of_res = 0;
 	const unsigned long long combinations = 1ULL << var_count;
+
+	for (int i = 0; i < var_count; ++i) {
+		fictivs[i] = 1;
+	}
 
 	for (unsigned long long mask=0; mask < combinations; ++mask) {
 		for (int i = 0; i < var_count; ++i) {
@@ -295,7 +305,11 @@ int main() {
 
 
 		int result = eval();
+		results[count_of_res] = result;
 		printf("  %d \n", result);
+		
+		
+
 		if (result == 1) {
 			if (strlen(PDNF)!=0) {
 				strncat_s(PDNF, 10000, "|", 1);
@@ -335,8 +349,8 @@ int main() {
 					strncat_s(PKNF, 10000, "|", 1);
 			}
 			strncat_s(PKNF, 10000, ")", 2);
-
 		}
+		++count_of_res;
 	}
 	if (strlen(PDNF) != 0) {
 		printf("PDNF: %s", PDNF);
@@ -351,5 +365,46 @@ int main() {
 		printf("\nImpossible to create a PKNF.");
 	}
 	
+	int found = 0;
+	int count = 1;
+	char first_half[1000];
+	char second_half[1000];
+	printf("\nFictivs: ");
+	
+	for (int i = 0; i < var_count; ++i) {
+		first_half[0] = '\0';
+		second_half[0] = '\0';
+		for (int j = 0; j < (int)(pow(2, count)); ++j) {
+			
+			for (int row = j * (int)(pow(2, var_count - count));row < (((int)(pow(2, var_count)) / (int)(pow(2, count))) * (j + 1));++row) {
+				char temp[2];
+				temp[0] = results[row] + '0';
+				temp[1] = '\0';
+
+				if (j % 2 == 0) {
+					strncat_s(first_half, sizeof(first_half), temp, 1);
+				}
+				else {
+					strncat_s(second_half, sizeof(second_half), temp, 1);
+				}
+			}
+		}
+		if (strcmp(first_half, second_half) == 0) {
+			if (!found) {
+				printf("%c", variables[count - 1]);
+			}
+			else {
+				printf(", %c", variables[count - 1]);
+			}
+			
+			found = 1;
+		}
+		++count;
+	}
+
+	if (!found) {
+		printf("not found");
+	}
+
 	return 0;
 }
